@@ -23,6 +23,7 @@ export type CallbackResult<U extends User> = (Partial<U> & {
 	onSignUp?: (userData: Partial<U>) => MaybePromise<Partial<U> | null>;
 	onSignIn?: (userData: Partial<U>, user: U, account: Account | null) => MaybePromise<Partial<U> | null>;
 	onLinkAccount?: (user: U) => MaybePromise<Partial<Account>>;
+	providerId?: string;
 }) | null | undefined;
 
 export type CredentialOptions<U extends User = User, P extends string = "/sign-in/credentials", Z extends (StandardSchemaV1|undefined) = undefined> = {	
@@ -219,7 +220,7 @@ export const credentials = <U extends User = User, P extends string = "/sign-in/
 						}
 						throw APIError.from("UNAUTHORIZED", CREDENTIALS_ERROR_CODES.INVALID_CREDENTIALS);
 					}
-					let {onSignIn, onSignUp, onLinkAccount, email, ..._userData} = callbackResult;
+					let {onSignIn, onSignUp, onLinkAccount, email, providerId,  ..._userData} = callbackResult;
 					let userData: Partial<U> = _userData as Partial<U>;
 
 					// Fallback email from body if not provided in callback result
@@ -320,7 +321,7 @@ export const credentials = <U extends User = User, P extends string = "/sign-in/
 						account = await ctx.context.internalAdapter.linkAccount(
 							{
 								userId: user.id,
-								providerId: options.providerId || "credential",
+								providerId: callbackResult?.providerId || options.providerId || "credential",
 								accountId: user.id,
 								...accountData
 							}
@@ -362,7 +363,7 @@ export const credentials = <U extends User = User, P extends string = "/sign-in/
 								},
 								{
 									field: "providerId",
-									value: options.providerId || "credential",
+									value: callbackResult?.providerId || options.providerId || "credential",
 								},
 							],
 						});
@@ -414,7 +415,7 @@ export const credentials = <U extends User = User, P extends string = "/sign-in/
 							account = await ctx.context.internalAdapter.linkAccount(
 								{
 									userId: user.id,
-									providerId: options.providerId || "credential",
+									providerId: callbackResult?.providerId || options.providerId || "credential",
 									accountId: user.id,
 									...accountData
 								}
